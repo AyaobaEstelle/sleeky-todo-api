@@ -10,35 +10,50 @@ export class TodoService {
          private todoModel: mongoose.Model<Todo>,
     ) {}
 
-    async findAll(): Promise<Todo[]> {
-        const todos = await this.todoModel.find();
-        return todos;
+    async findAllTodos(page: number = 1, limit: number = 10): Promise<{ data: Todo[]; total: number; currentPage: number; totalPages: number }> {
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+          this.todoModel.find().skip(skip).limit(limit).exec(),
+          this.todoModel.countDocuments().exec(), 
+        ]);
+      
+        const totalPages = Math.ceil(total / limit); 
+        return {
+          data,
+          total,
+          currentPage: page,
+          totalPages,
+        };
+      }
 
-    }
-    async create(todo: Todo): Promise<Todo> {
-        const res = await this.todoModel.create(todo)
-        return res;
+    async create(newTodo: Todo): Promise<Todo> {
+        const createdTodo = await this.todoModel.create(newTodo)
+        return createdTodo;
     };
 
-    async findById(id: string): Promise<Todo> {
-        const todo = await this.todoModel.findById(id)
+    async findTodoById(todoId: string): Promise<Todo> {
+        const foundTodo = await this.todoModel.findById(todoId)
 
-        if(!todo) {
-            throw new NotFoundException(`Todo with ID ${id} not found`);
+        if(!Todo) {
+            throw new NotFoundException(`Todo with ID ${todoId} not found`);
         }
-        return todo;
+        return foundTodo;
     };
 
-    async updateById(id: string, todo: Todo): Promise<Todo> {
-        return await this.todoModel.findByIdAndUpdate(id, todo, {
-            new: true,
+
+    async updateTodoById(todoId: string, updatedTodoData: Partial<Todo>): Promise<Todo> {
+        const updatedTodo = await this.todoModel.findByIdAndUpdate(todoId, updatedTodoData, {
+             new: true ,
             runValidators: true,
-        });
-    }
+         });
 
-    async deleteById(id: string): Promise<Todo> {
-        return await this.todoModel.findByIdAndDelete(id);
-       
-    }
+        return updatedTodo;
+      }
+      
 
+    async deleteTodoById(todoId: string): Promise<Todo> {
+        const deletedTodo = await this.todoModel.findByIdAndDelete(todoId);
+        return deletedTodo;
+      }
+      
 }

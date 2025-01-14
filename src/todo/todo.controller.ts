@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { Todo } from './schemas/todo.schema';
 import { CreateTodoDto } from './dto/create-todo-dto';
@@ -9,9 +9,12 @@ export class TodoController {
     constructor(private readonly todoService: TodoService) {}
 
     @Get()
-    async getAllTodos(): Promise<Todo[]> { 
-        return this.todoService.findAll(); 
-    }CreateTodoDto
+    async findAll(@Query('page') page: string, @Query('limit') limit: string) {
+      const pageNumber = parseInt(page, 10) || 1;
+      const limitNumber = parseInt(limit, 10) || 10;
+      return this.todoService.findAllTodos(pageNumber, limitNumber);
+    }
+  
 
     @Post()
     async createTodo(
@@ -26,7 +29,7 @@ export class TodoController {
             @Param('id')
             id: string
         ): Promise<Todo> { 
-            return this.todoService.findById(id); 
+            return this.todoService.findTodoById(id); 
         }
 
         @Put(':id')
@@ -34,9 +37,9 @@ export class TodoController {
             @Param('id')
             id: string,
             @Body()
-            todo: UpdateTodoDto
+            updateTodoDto: UpdateTodoDto
         ): Promise<Todo> {
-            return this.todoService.updateById(id, todo);
+            return this.todoService.updateTodoById(id, updateTodoDto);
         }
 
         @Delete(':id')
@@ -44,6 +47,6 @@ export class TodoController {
             @Param('id')
             id: string
         ): Promise<Todo> {
-            return this.todoService.deleteById(id);
+            return this.todoService.deleteTodoById(id);
         }
 }
